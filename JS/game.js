@@ -246,7 +246,7 @@ function Vitamin(canvasWidth, bottomMargin, topMargin, type) {
             this.img = document.getElementById("almonds");
             break;
         case "B9":	// increase bone marrow regeneration
-            this.boneMarrowRegeneration = .1;
+            this.boneMarrowRegeneration = .05;
             this.img = document.getElementById("broccoli");
             break;
         case "C":	// Antiviral agent - kill all the virus on the screen
@@ -296,9 +296,10 @@ Vitamin.prototype.bottom = function () {
 GameWorld = new function () {
 	// Main attributes
     var FRAMERATE = 60;
-	var GAMEOVER_DELAY = 8000;
+	var GAMEOVER_DELAY = 5500;
+	var INTRO_DELAY = 3000;
     var WOUND_GROW_FACTOR = .5;
-	var PLAYER_STATE;
+	var PLAYER_STATE = "GAMEOVER";
 	var world = { 
 		width: UserProfile.isTouchDevice() ? window.innerWidth : (window.innerWidth - (window.innerWidth/50)), 
 		height: UserProfile.isTouchDevice() ? window.innerHeight : (window.innerHeight - (window.innerHeight/40)), 
@@ -308,6 +309,7 @@ GameWorld = new function () {
 
 	// Configs attributes
     var stage;
+	var message;
 	var virus_spawn;
 	var bacteria_spawn;
 	var protozoa_spawn;
@@ -322,6 +324,7 @@ GameWorld = new function () {
     var player;
 	var inPause = false;
 	var inResume = false;
+	var inMenu = false;
     var mouse = { x: 0, y: 0 };
     var WBCs = [];
 	var RBCs = [];
@@ -342,7 +345,7 @@ GameWorld = new function () {
 	var linkY = world.height - 70;
 	var linkHeight=55;
 	var inLink = false;
-	
+
 	// Bone Marrow variables
 	var boneMarrowBarStart = world.width/8;
 	var boneMarrowBarEnd;
@@ -352,6 +355,12 @@ GameWorld = new function () {
 	//Pause margins  
 	var pauseStartX = 5;
 	var pauseTop = hitAreaY_bottomLimit + 20;
+	
+	// Menu margins
+	menuStartX = 0;
+	menuEndX = world.width/10; 
+	menuStartY = (world.height/2.58);
+	menuEndY = (world.height/1.814);
 	
     // make the world object available externally to the "class"
     this.gameWorld = world;
@@ -379,6 +388,7 @@ GameWorld = new function () {
 			WBC_losing = document.getElementById("wbc_loosing");
 			pause_img = document.getElementById("pause_img");
 			levels_img = document.getElementById("levels");
+			menu_img = document.getElementById("menu");
 			
             // Set intervals
             setInterval(frame, 1000 / FRAMERATE);
@@ -390,7 +400,7 @@ GameWorld = new function () {
     /* GameWorld: frame
 		- Main loop, rendering all objects per framerate */
     function frame() {
-        if( playing ) {    
+        if( playing ) {    // loop inside playing time
 			context.drawImage(background_img, 0, 0, world.width, world.height);
             delta = new Date().getTime() - time;
 			update();
@@ -400,15 +410,24 @@ GameWorld = new function () {
 		else	// loop outside playing time
 		{
 			// Check player state
-			if (PLAYER_STATE == "PAUSE"){
+			switch(PLAYER_STATE) {
+			case "PAUSE":
 				ShowScore();
-			}
-			else {
-				// Some time right after stage (to check score)
+				break;
+			case "LEVELSELECTED":
+				if (new Date().getTime() < (time + INTRO_DELAY))
+					ShowStageIntro();
+				else
+					startLevel();
+				break;
+			case "GAMEOVER":
 				if (new Date().getTime() < (time + GAMEOVER_DELAY))
-					ShowScore();
+					ShowScore(message);
 				else
 					renderLevelSelection();
+				break;
+			default:
+				break;
 			}
 		}
     }
@@ -420,7 +439,7 @@ GameWorld = new function () {
 		if(playing){
 			delta = new Date().getTime();
 			time = new Date().getTime();						
-			PLAYER_STATE = "PLAYING";
+			PLAYER_STATE = "";
 			document.getElementById('background_audio').muted = false;
 		}
 		else
@@ -491,19 +510,20 @@ GameWorld = new function () {
 			context.fillRect(boneMarrowBarStart+1, hitAreaY_topLimit - 48, boneMarrowBarEnd-1, hitAreaY_topLimit - 33);
 		}
 		if (blinkCount > 0) blinkCount--;
-		// Middle HUD
 		context.font = "Bold 30px Calibri";
         context.fillStyle = 'rgba(100,243,21,0.8)';
-		context.fillText("Stage " + stage.id, getTextPositionX("stage 1",2), hitAreaY_bottomLimit + 50);
-		context.fillText(stage.name, getTextPositionX(stage.name,2), hitAreaY_bottomLimit + 25);
+		context.fillText("Stage " + stage.id, getTextPositionX("stage 1",2), hitAreaY_topLimit - 30);
+		context.fillText(stage.name, getTextPositionX(stage.name,2), hitAreaY_topLimit - 5);
 		// Down HUD
 		context.drawImage(pause_img, pauseStartX, hitAreaY_bottomLimit + 20);
+		context.font = "Bold 80px Calibri";
+        context.fillStyle = 'rgba(10,10,210,0.8)';
+        context.fillText("HEALTH: " + player.energy + " %", world.width/6, hitAreaY_bottomLimit + 70);
 		context.font = "Bold 40px Calibri";
-        context.fillStyle = 'rgba(243,243,21,0.5)';
-        context.fillText("HEALTH: " + player.energy, 55, hitAreaY_bottomLimit + 50);
-		context.fillText("SCORE: " + player.score, 3*(canvas.width/4), hitAreaY_bottomLimit + 50);
+		context.fillStyle = 'rgba(243,243,21,0.5)';
+		context.fillText("SCORE: " + player.score, 3*(canvas.width/4), hitAreaY_bottomLimit + 40);
 		context.fillText("ACCURACY: " + player.accuracy + "%", 
-			((3*(world.width/4))-(context.measureText("ACCURACY").width/4)), hitAreaY_bottomLimit + 85);
+			((3*(world.width/4))-(context.measureText("ACCURACY").width/4)), hitAreaY_bottomLimit + 75);
 		// Highlights HUD
 		updateHighlights();
     }
@@ -730,18 +750,26 @@ GameWorld = new function () {
 			}
 		}
 	}
+	
+	/* GameWorld: ShowStageIntro
+		- Show the stage introduction image */
+	function ShowStageIntro(){ 
+		img = document.getElementById('stage' + (levelID+1));
+		context.drawImage(background_img, 0, 0, world.width, world.height);
+		context.drawImage(img, 0, 0, world.width, world.height);
+	}
 
 	/* GameWorld: GameOver
 		- Update state of the player WIN or LOSE */
     function GameOver(win) {
         playing = false;
-		
+		PLAYER_STATE = "GAMEOVER";
 		if(win){
-			PLAYER_STATE = "YOU WIN";
+			message = "YOU WIN";
 			bestLevel = stage.id;
 		}
 		else
-			PLAYER_STATE = "YOU LOSE";
+			message = "GAME OVER";
 
 		document.getElementById('background_audio').muted = true;
     }
@@ -751,15 +779,16 @@ GameWorld = new function () {
 	function ShowScore(){
 		context.drawImage(background_img, 0, 0, world.width, world.height);
 		if (PLAYER_STATE == "PAUSE"){
+			context.drawImage(menu_img, menuStartX, menuStartY, menuEndX, menuEndY);
 			context.font = "Bold 70px Calibri";
 			context.fillStyle = 'rgba(150,150,150,0.8)';
-			context.fillText(PLAYER_STATE, getTextPositionX(PLAYER_STATE,2), world.height/3);
+			context.fillText("PAUSE", getTextPositionX("PAUSE",2), world.height/3);
 			context.fillStyle = 'rgba(50,50,50,1)';
 			context.fillText("RESUME", getTextPositionX("RESUME",2), world.height/2);
 		} else {
 			context.font = "Bold 90px Calibri";
-			context.fillStyle = PLAYER_STATE == "YOU WIN" ? 'rgba(23,2,201,0.9)' : 'rgba(230,24,21,0.9)';
-			context.fillText(PLAYER_STATE, getTextPositionX(PLAYER_STATE,2), world.height/2);
+			context.fillStyle = arguments[0] == "YOU WIN" ? 'rgba(23,2,201,0.9)' : 'rgba(230,24,21,0.9)';
+			context.fillText(arguments[0], getTextPositionX(arguments[0],2), world.height/2);
 		}
 		context.font = "Bold 40px Calibri";
 		context.fillStyle = 'rgba(0,220,221,0.5)';
@@ -780,27 +809,22 @@ GameWorld = new function () {
 		}
 		
 		//is the mouse hovering the link? (before start the stage)
-		if (!playing)
-		{
-			if (PLAYER_STATE == "PAUSE"){
+		if (!playing){
+			if (PLAYER_STATE == "PAUSE"){ // on pause screen
 				var textSize = context.measureText("RESUME");
-				if(updatedX >= getTextPositionX("RESUME",2) && updatedX <= (getTextPositionX("RESUME",2) + textSize.width) 
-					&& updatedY <= (world.height/2 + 35) && updatedY >= (world.height/2 - 35))
-					inResume = true;
-				else inResume = false;
-			} else {
+				inResume = (updatedX >= getTextPositionX("RESUME",2) && updatedX <= (getTextPositionX("RESUME",2) + textSize.width) 
+					&& updatedY <= (world.height/2 + 35) && updatedY >= (world.height/2 - 35));
+			} else {	// on stage selection screen
 				if(updatedX >= linkStartX && updatedX <= linkEndX && updatedY <=(linkY+linkHeight) && updatedY >= (linkY-linkHeight+25)
 					&& ((((updatedX / spaceBetweenLevels) % 1) >= .45) && (((updatedX / spaceBetweenLevels) % 1) <= .8))
 				){
-					document.body.style.cursor = "pointer";
 					levelID = Math.floor(updatedX / spaceBetweenLevels);
 					inLink=true;
 				}
-				else{
-				  document.body.style.cursor = "";
-				  inLink=false;
-				}
+				else
+					inLink=false;
 			}
+			inMenu = (updatedX >= menuStartX && updatedX <= menuEndX && updatedY <= menuEndY && updatedY >= menuStartY);
 		}
 		//check if the player is in hitArea
 		else
@@ -810,14 +834,7 @@ GameWorld = new function () {
 			else{
 				hitArea = false;
 				// check if the player is onPause icon
-				if (updatedX >= pauseStartX && updatedX <= (pauseStartX + pause_img.width) && updatedY >= pauseTop && updatedY <= (pauseTop + pause_img.height)){
-					document.body.style.cursor = "pointer";
-					inPause = true;
-				}
-				else{
-				  document.body.style.cursor = "";
-				  inPause=false;
-				}
+				inPause = (updatedX >= pauseStartX && updatedX <= (pauseStartX + pause_img.width) && updatedY >= pauseTop && updatedY <= (pauseTop + pause_img.height));
 			}
 		}
 
@@ -839,12 +856,18 @@ GameWorld = new function () {
 				togglePause();
 		}
 		else { 
-			if (inResume){
-				togglePause();
+			if (PLAYER_STATE == "PAUSE"){
+				if (inResume)
+					togglePause();
+			} else {
+				if (inLink){
+					inLink = false;
+					startGame();
+				}
 			}
-			if (inLink && PLAYER_STATE != "PAUSE"){
-				inLink = false;
-				startGame();
+			if (inMenu){
+				inMenu = false;
+				window.history.back();
 			}
 		}
     }
@@ -861,7 +884,7 @@ GameWorld = new function () {
 					if (mouse.x >= vit.left() && mouse.x <= vit.right()
 						&& mouse.y >= vit.top() && mouse.y <= vit.bottom()){
 						giveBonus(vit);
-						createHighlight("Vitamin " + vit.type,"Bold 50px Calibri","rgba(0,204,20,",mouse.x,mouse.y,0,0,.01); 
+						createHighlight("Vitamin " + vit.type,"Bold 40px Calibri","rgba(0,204,20,",mouse.x,mouse.y,0,0,.01); 
 						Vitamins.splice(i, 1);
 						i--;
 						gotIt = true;
@@ -1003,13 +1026,17 @@ GameWorld = new function () {
 		if (protozoa_spawn != null) { clearInterval(protozoa_spawn); protozoa_spawn = null; } 
 		if (fungi_spawn != null) { clearInterval(fungi_spawn); fungi_spawn = null; }
 		
-        startLevel();
+		// Show INTRO background
+		linkEndX = 0;
+		PLAYER_STATE = "LEVELSELECTED";
+		time = new Date().getTime();
     }
 
 	/* GameWorld: startLevel
 		- Initialize variables for the next stage */	
     function startLevel() {
         playing = true;
+		PLAYER_STATE = "";
 		// Clear all variables from the previous stage (if exist)
         WBCs = [];
 		RBCs = [];

@@ -1,0 +1,42 @@
+
+<html>
+<head>
+<style type="text/css">
+.body { width: 1400px; height: 800px; position: relative; background-position: 0 0; background-repeat: no-repeat}
+.map_image .map_link { display: block; position: absolute; text-indent: -999em; overflow: hidden; }
+.map_image #map_link_0 { width: 110px; height: 110px; top: 325px; left: 0px; }
+.map_image #map_link_1 { width: 163px; height: 150px; top: 249px; left: 620px; }
+#on { position:relative; left:650px; top:450px;}
+#off { position:relative; left:650px; top:450px;  }
+	</style>
+	<script type="text/javascript" >
+	window.onload = function() {
+		document.getElementById("on").style.display = "none";
+	document.getElementById("off").style.display = "none";
+	}
+	  function toggleImage() {
+	if(document.getElementById("on").style.display == "none") {
+	document.getElementById("on").style.display = "block";
+	document.getElementById("off").style.display = "none";
+	
+	}
+	else {
+	document.getElementById("on").style.display = "none";
+	document.getElementById("off").style.display = "block";
+	}
+	}
+	</script>
+</head>
+<body class="map_image" style="background-image: url('img/options.png'); background-repeat: no-repeat;">
+<a class="map_link" id="map_link_0" title="index" href="index.html">index.html</a>
+<a class="map_link" id="map_link_1" onClick="toggleImage()" title="sounds" href="javascript:void(0);">sounds</a>
+<div id="on">
+<img src="img/on.png"/><br />
+</div>
+
+<div id="off">
+<img src="img/off.png" />
+</div>
+
+</body>
+</html>
