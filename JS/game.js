@@ -325,6 +325,7 @@ GameWorld = new function () {
 	var inPause = false;
 	var inResume = false;
 	var inMenu = false;
+	var inSound = false;
     var mouse = { x: 0, y: 0 };
     var WBCs = [];
 	var RBCs = [];
@@ -355,6 +356,12 @@ GameWorld = new function () {
 	//Pause margins  
 	var pauseStartX = 5;
 	var pauseTop = hitAreaY_bottomLimit + 20;
+	
+	// Sound margins
+	soundStartX = world.width/1.086;
+	soundEndX = world.width/1.021; 
+	soundStartY = (world.height/2.58);
+	soundEndY = (world.height/2.05);
 	
 	// Menu margins
 	menuStartX = 0;
@@ -389,6 +396,8 @@ GameWorld = new function () {
 			pause_img = document.getElementById("pause_img");
 			levels_img = document.getElementById("levels");
 			menu_img = document.getElementById("menu");
+			off_img = document.getElementById("off");
+			on_img = document.getElementById("on");
 			
             // Set intervals
             setInterval(frame, 1000 / FRAMERATE);
@@ -431,6 +440,10 @@ GameWorld = new function () {
 			}
 		}
     }
+	
+	/* GameWorld: toggleSound
+		- Turn sound ON or OFF */
+	function toggleSound(){	document.getElementById('background_audio').muted = !document.getElementById('background_audio').muted;	}
 	
     /* GameWorld: togglePause
 		- Pause or resume current stage */
@@ -500,32 +513,42 @@ GameWorld = new function () {
 		- Render all HUD information on canvas */
     function renderHUD() {
 		// Up HUD
-		context.font = "Bold 20px sans-serif";
-		context.fillStyle = 'rgba(243,243,21,0.5)';
-		context.fillText("Bone Marrow", boneMarrowBarStart, hitAreaY_topLimit - 56);
-		if (blinkCount <= 0 || (blinkCount % 5) == 0){
-			context.fillStyle = 'rgba(2,2,1,1)';
-			context.strokeRect(boneMarrowBarStart, hitAreaY_topLimit - 50, stage.boneMarrowCapacity, hitAreaY_topLimit - 30);
-			context.fillStyle = 'rgba(240,240,210,0.4)';
-			context.fillRect(boneMarrowBarStart+1, hitAreaY_topLimit - 48, boneMarrowBarEnd-1, hitAreaY_topLimit - 33);
-		}
-		if (blinkCount > 0) blinkCount--;
-		context.font = "Bold 30px Calibri";
-        context.fillStyle = 'rgba(100,243,21,0.8)';
-		context.fillText("Stage " + stage.id, getTextPositionX("stage 1",2), hitAreaY_topLimit - 30);
-		context.fillText(stage.name, getTextPositionX(stage.name,2), hitAreaY_topLimit - 5);
+			// Bone Marrow Bar
+			context.font = "Bold 20px sans-serif";
+			context.fillStyle = 'rgba(243,243,21,0.5)';
+			context.fillText("Bone Marrow", boneMarrowBarStart, hitAreaY_topLimit - 56);
+			if (blinkCount <= 0 || (blinkCount % 5) == 0){
+				context.fillStyle = 'rgba(2,2,1,1)';
+				context.strokeRect(boneMarrowBarStart, hitAreaY_topLimit - 50, stage.boneMarrowCapacity, hitAreaY_topLimit - 30);
+				context.fillStyle = 'rgba(240,240,210,0.4)';
+				context.fillRect(boneMarrowBarStart+1, hitAreaY_topLimit - 48, boneMarrowBarEnd-1, hitAreaY_topLimit - 33);
+			}
+			if (blinkCount > 0) blinkCount--;
+			// Stage name
+			context.font = "Bold 30px Calibri";
+			context.fillStyle = 'rgba(100,243,21,0.8)';
+			context.fillText("Stage " + stage.id, getTextPositionX("stage 1",2), hitAreaY_topLimit - 30);
+			context.fillText(stage.name, getTextPositionX(stage.name,2), hitAreaY_topLimit - 5);
 		// Down HUD
-		context.drawImage(pause_img, pauseStartX, hitAreaY_bottomLimit + 20);
-		context.font = "Bold 80px Calibri";
-        context.fillStyle = 'rgba(10,10,210,0.8)';
-        context.fillText("HEALTH: " + player.energy + " %", world.width/6, hitAreaY_bottomLimit + 70);
-		context.font = "Bold 40px Calibri";
-		context.fillStyle = 'rgba(243,243,21,0.5)';
-		context.fillText("SCORE: " + player.score, 3*(canvas.width/4), hitAreaY_bottomLimit + 40);
-		context.fillText("ACCURACY: " + player.accuracy + "%", 
-			((3*(world.width/4))-(context.measureText("ACCURACY").width/4)), hitAreaY_bottomLimit + 75);
+			context.drawImage(pause_img, pauseStartX, hitAreaY_bottomLimit + 20);	// Pause img
+			// Health bar
+			context.font = "Bold 30px Calibri";
+			context.fillStyle = 'rgba(10,10,210,0.8)';
+			context.fillText("LOOSE", world.width/8, hitAreaY_bottomLimit + 30);
+			context.fillText("WIN", world.width/3.3, hitAreaY_bottomLimit + 30);
+			context.fillText(player.energy + " %", world.width/5, hitAreaY_bottomLimit + 60);
+			context.fillStyle = 'rgba(2,2,1,1)';
+			context.strokeRect(world.width/8, hitAreaY_bottomLimit + 40, 400, 23);
+			context.fillStyle = 'rgba(240,100,110,0.6)';
+			context.fillRect((world.width/8)+1, hitAreaY_bottomLimit + 41, (player.energy*4)-1, 21);
+			// Score and Accuracy
+			context.font = "Bold 40px Calibri";
+			context.fillStyle = 'rgba(243,243,21,0.5)';
+			context.fillText("SCORE: " + player.score, 3*(canvas.width/4), hitAreaY_bottomLimit + 40);
+			context.fillText("ACCURACY: " + player.accuracy + "%", 
+				((3*(world.width/4))-(context.measureText("ACCURACY").width/4)), hitAreaY_bottomLimit + 75);
 		// Highlights HUD
-		updateHighlights();
+			updateHighlights();
     }
 
 	/* GameWorld: renderWound
@@ -642,12 +665,10 @@ GameWorld = new function () {
 								xLocation = enemy.left();
 							}
 							collisionPercentage = ~~((collisionArea/coverArea)*100);
-							if(collisionPercentage < 10){
-								collisionPercentage = 10;
-							}
+							if(collisionPercentage < 10) collisionPercentage = 10;
 							createHighlight(collisionPercentage+"%","Bold 50px Calibri","rgba(0,0,0,",xLocation,yLocation,0,-2,.05); 
 							player.accuracy = ~~((player.accuracy + collisionPercentage)/2);
-							player.score += enemy.damage;
+							player.score += ~~((collisionArea/coverArea) * enemy.damage);
 							Enemies.splice(i, 1);
 							WBCs.splice(j, 1);
 							i--;
@@ -779,7 +800,7 @@ GameWorld = new function () {
 	function ShowScore(){
 		context.drawImage(background_img, 0, 0, world.width, world.height);
 		if (PLAYER_STATE == "PAUSE"){
-			context.drawImage(menu_img, menuStartX, menuStartY, menuEndX, menuEndY);
+			context.drawImage(menu_img, menuStartX, menuStartY, 100, 100);
 			context.font = "Bold 70px Calibri";
 			context.fillStyle = 'rgba(150,150,150,0.8)';
 			context.fillText("PAUSE", getTextPositionX("PAUSE",2), world.height/3);
@@ -803,11 +824,7 @@ GameWorld = new function () {
         var gameWorld = GameWorld.gameWorld;
 		var updatedX = event.clientX;
 		var updatedY = event.clientY;
-		
-		if(updatedX > gameWorld.width - gameWorld.toolMargin) {
-			updatedX = gameWorld.width - gameWorld.toolMargin;
-		}
-		
+
 		//is the mouse hovering the link? (before start the stage)
 		if (!playing){
 			if (PLAYER_STATE == "PAUSE"){ // on pause screen
@@ -823,12 +840,14 @@ GameWorld = new function () {
 				}
 				else
 					inLink=false;
+				inSound = (updatedX >= soundStartX && updatedX <= soundEndX && updatedY <= soundEndY && updatedY >= soundStartY);
 			}
 			inMenu = (updatedX >= menuStartX && updatedX <= menuEndX && updatedY <= menuEndY && updatedY >= menuStartY);
 		}
 		//check if the player is in hitArea
 		else
 		{
+			if (updatedX > gameWorld.width - gameWorld.toolMargin) updatedX = gameWorld.width - gameWorld.toolMargin;
 			if (updatedY < hitAreaY_bottomLimit && updatedY > hitAreaY_topLimit)
 				hitArea = true;
 			else{
@@ -846,7 +865,6 @@ GameWorld = new function () {
 		- Function to handle mouse click event */	
     function documentMouseDownHandler(event) {
         event.preventDefault();
-        //mouse.down = true;
 		if(playing){
 			if(hitArea){
 				if(!tryGetVitamin()) 
@@ -863,6 +881,9 @@ GameWorld = new function () {
 				if (inLink){
 					inLink = false;
 					startGame();
+				} else if (inSound){
+					toggleSound();
+					inSound = false;
 				}
 			}
 			if (inMenu){
@@ -972,6 +993,11 @@ GameWorld = new function () {
 		- Render all stages numbers on Select Level page */	
     function renderLevelSelection() {
 		context.drawImage(stageBackground_img, 0, 0, world.width, world.height);
+		// Sound Control
+			var soundStatus_img;
+			if (document.getElementById('background_audio').muted) soundStatus_img = off_img;
+			else soundStatus_img = on_img;
+			context.drawImage(soundStatus_img, world.width/1.08, world.height/2, 100, 50);
 		var gap = 0;
 		var newX= spaceBetweenLevels / 2;
 		linkStartX = spaceBetweenLevels /3;
