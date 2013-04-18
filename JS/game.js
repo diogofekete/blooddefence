@@ -453,12 +453,12 @@ GameWorld = new function () {
 			delta = new Date().getTime();
 			time = new Date().getTime();						
 			PLAYER_STATE = "";
-			document.getElementById('background_audio').muted = false;
+			//document.getElementById('background_audio').muted = false;
 		}
 		else
 		{
 			PLAYER_STATE = "PAUSE";
-			document.getElementById('background_audio').muted = true;
+			//document.getElementById('background_audio').muted = true;
 		}
 	}
 
@@ -1042,7 +1042,6 @@ GameWorld = new function () {
 		player = new Player();
 
         canvas.style.cursor = 'default';
-		document.getElementById('background_audio').muted = false;
 		
 		/*  Diogo Fekete 2013.03.05
 		 Reset all intervals from previuos stage */
