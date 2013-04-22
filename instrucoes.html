@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+<script type="text/javascript" src="jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="turn.min.js"></script>
+
+<style type="text/css">
+body{
+	background:#ccc;
+}
+#magazine{
+	width:1152px;
+	height:752px;
+}
+#magazine .turn-page{
+	background-color:#ccc;
+	background-size:100% 100%;
+}
+</style>
+</head>
+<body>
+
+<div id="magazine">
+	<div style="background-image:url(img/page1_por.png);"></div>
+	<div style="background-image:url(img/page2_por.png);"></div>
+	<div style="background-image:url(img/page3_por.png);"></div>
+	<div style="background-image:url(img/page4_por.png);"></div>
+	<div style="background-image:url(img/page5_por.png);"></div>
+	<div style="background-image:url(img/page6_por.png);"></div>
+</div>
+
+
+<script type="text/javascript">
+
+	$(window).ready(function() {
+		$('#magazine').turn({
+							display: 'double',
+							acceleration: true,
+							gradients: !$.isTouch,
+							elevation:50,
+							when: {
+								turned: function(e, page) {
+									/*console.log('Current view: ', $(this).turn('view'));*/
+								}
+							}
+						});
+	});
+	
+	
+	$(window).bind('keydown', function(e){
+		
+		if (e.keyCode==37)
+			$('#magazine').turn('previous');
+		else if (e.keyCode==39)
+			$('#magazine').turn('next');
+			
+	});
+
+</script>
+<a href="index.html">
+<img border="0" src="img/menu.png" alt="Back to Main" width="100" height="100"></a>
+<a href="instructions.html">
+<img border="0" src="img/canada.png" alt="english" width="50" height="50"></a>
+<a href="instrucion.html">
+<img border="0" src="img/spanish.png" alt="spanish" width="50" height="50"></a>
+<a href="instrucoes.html">
+<img border="0" src="img/brazil.png" alt="english" width="50" height="50"></a>
+<a href="directions.html">
+<img border="0" src="img/french.png" alt="english" width="50" height="50"></a>
+
+</body>
+</html>
