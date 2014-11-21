@@ -1,0 +1,44 @@
+<html>
+	<head>
+		<!--[if IE]>
+			<h1 style="color:rgb(255,0,0)">Internet Explorer detected!</h1>
+			<h2>Best played on <a href="http://www.mozilla.org/en-US/firefox/new/">Mozilla</a> or <a href="https://www.google.com/intl/en/chrome/browser/index.html#eula">Google</a> browsers</h2>
+		<![endif]-->
+		<script type="text/javascript" src="JS/utils.js"></script>
+		<script type="text/javascript">
+		function styleLink(){
+			if (UserProfile.isTouchDevice()){
+				document.getElementById('MobileImage').style.display = "block";
+			}
+			else{
+				document.getElementById('BrowserImage').style.display = "block";
+			}
+		}
+		</script>
+	</head>
+<body>
+
+ <div id="BrowserBackground" style="position:fixed;width: 1400px; height: 800px;">
+    <img id="BrowserImage" src="img/mainScreen_Desktop.png" usemap="#map" border="0" width="100%" alt="" />
+<map id="map_ID" name="map">
+  <area shape="rect" coords="621,371,775,450" alt="Play" href="game.html">
+	  <area shape="rect" coords="535,574,855,638" alt="Instructions" href="instructions.html">
+	    <area shape="rect" coords="592,484,797,542" alt="credits" href="credits.html">
+  <area shape="circle" coords="1278,703,41" alt="quit" onClick="Javascript: var answer = confirm ('Are you sure you want to quit Blood Defence?');
+	if (answer)	window.close()">
+</map>
+	</div>
+	
+<div id = "MobileBackground">
+<img id="MobileImage" src="img/mainscreen_Mobile.png" alt="mainScreen_Mobile" width="720" height="1280" usemap="#Map" border="0" style="background-repeat:no-repeat;height:100%;width:100%;display:none" />
+<map name="Map" id="Map">
+  
+  <area shape="rect" coords="279,487,422,556" href="#game.html" alt="play" />
+  <area shape="circle" coords="649,786,42 onClick="self.close()" alt="quit" />
+  <area shape="rect" coords="182,682,507,746" href="#instructions.html" alt="instructions" />
+  <area shape="rect" coords="246,591,449,654" href="#credits.html" alt="credits" />
+ 
+</map>
+</div>
+	</body>
+</html>
